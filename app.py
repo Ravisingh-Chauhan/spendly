@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from database.db import get_db, init_db, seed_db
-from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
@@ -32,8 +32,63 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        error = None
+
+        # Validate name
+        if not name:
+            error = "Name is required"
+        elif len(name) < 2 or len(name) > 100:
+            error = "Name must be between 2 and 100 characters"
+
+        # Validate email
+        if not error:
+            if not email:
+                error = "Email is required"
+            elif "@" not in email:
+                error = "Email must contain @"
+
+        # Validate password
+        if not error:
+            if not password:
+                error = "Password is required"
+            elif len(password) < 8:
+                error = "Password must be at least 8 characters"
+
+        # Check email uniqueness
+        if not error:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+            if cursor.fetchone():
+                error = "Email already in use"
+            conn.close()
+
+        # Insert user if no errors
+        if not error:
+            try:
+                conn = get_db()
+                cursor = conn.cursor()
+                password_hash = generate_password_hash(password)
+                cursor.execute(
+                    "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+                    (name, email, password_hash)
+                )
+                conn.commit()
+                conn.close()
+                return redirect(url_for("login"))
+            except Exception as e:
+                error = "An error occurred during registration. Please try again."
+                conn.close()
+
+        return render_template("register.html", error=error)
+
     return render_template("register.html")
 
 
