@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from database.db import get_db, init_db, seed_db
+from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'
@@ -150,45 +152,61 @@ def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    user_id = session['user_id']
+
+    # Fetch real data from database
+    user = get_user_by_id(user_id)
+    if not user:
+        return redirect(url_for('login'))
+
+    stats = get_summary_stats(user_id)
+    transactions = get_recent_transactions(user_id)
+    categories = get_category_breakdown(user_id)
+
+    # Prepare user_info dict with initials
+    initials = ''.join([word[0].upper() for word in user['name'].split()])[:2]
     user_info = {
-        'initials': 'DU',
-        'name': 'Demo User',
-        'email': 'demo@spendly.com',
-        'member_since': 'June 8, 2026'
+        'initials': initials,
+        'name': user['name'],
+        'email': user['email'],
+        'member_since': user['member_since']
     }
 
-    stats = {
-        'total_spent': '₹4,119',
-        'transaction_count': 8,
-        'top_category': 'Shopping'
+    # Format stats for display (convert numbers to currency strings)
+    stats_display = {
+        'total_spent': f"₹{stats['total_spent']:,.2f}",
+        'transaction_count': stats['transaction_count'],
+        'top_category': stats['top_category']
     }
 
-    transactions = [
-        {'date': 'June 7', 'description': 'Restaurant lunch', 'category': 'Food', 'amount': '₹350'},
-        {'date': 'June 6', 'description': 'Miscellaneous', 'category': 'Other', 'amount': '₹200'},
-        {'date': 'June 5', 'description': 'Clothes', 'category': 'Shopping', 'amount': '₹1,200'},
-        {'date': 'June 5', 'description': 'OTT subscription', 'category': 'Entertainment', 'amount': '₹299'},
-        {'date': 'June 4', 'description': 'Pharmacy', 'category': 'Health', 'amount': '₹600'},
-        {'date': 'June 3', 'description': 'Electricity bill', 'category': 'Bills', 'amount': '₹850'},
-        {'date': 'June 2', 'description': 'Metro card recharge', 'category': 'Transport', 'amount': '₹120'},
-        {'date': 'June 1', 'description': 'Grocery run', 'category': 'Food', 'amount': '₹450'}
-    ]
+    # Format transactions for display
+    transactions_display = []
+    for txn in transactions:
+        # Format date from "YYYY-MM-DD" to "Month DD"
+        date_obj = datetime.strptime(txn['date'], '%Y-%m-%d')
+        formatted_date = date_obj.strftime('%B %-d' if hasattr(date_obj, 'strftime') else '%B %d').replace(' 0', ' ')
 
-    categories = [
-        {'name': 'Shopping', 'total': '₹1,200', 'percentage': 29},
-        {'name': 'Bills', 'total': '₹850', 'percentage': 21},
-        {'name': 'Food', 'total': '₹800', 'percentage': 19},
-        {'name': 'Health', 'total': '₹600', 'percentage': 15},
-        {'name': 'Entertainment', 'total': '₹299', 'percentage': 7},
-        {'name': 'Transport', 'total': '₹120', 'percentage': 3},
-        {'name': 'Other', 'total': '₹200', 'percentage': 5}
-    ]
+        transactions_display.append({
+            'date': formatted_date,
+            'description': txn['description'],
+            'category': txn['category'],
+            'amount': f"₹{txn['amount']:,.2f}"
+        })
+
+    # Format categories for display
+    categories_display = []
+    for cat in categories:
+        categories_display.append({
+            'name': cat['name'],
+            'total': f"₹{cat['amount']:,.2f}",
+            'percentage': cat['pct']
+        })
 
     return render_template('profile.html',
                          user_info=user_info,
-                         stats=stats,
-                         transactions=transactions,
-                         categories=categories)
+                         stats=stats_display,
+                         transactions=transactions_display,
+                         categories=categories_display)
 
 
 @app.route("/expenses/add")
