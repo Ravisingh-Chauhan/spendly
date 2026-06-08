@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Spendly{% endblock %}
+
+{% block content %}
+
+<!-- User Info Card Section -->
+<section class="profile-section">
+  <div class="profile-inner">
+    <div class="user-card">
+      <div class="user-avatar">{{ user_info.initials }}</div>
+      <h1 class="user-name">{{ user_info.name }}</h1>
+      <p class="user-email">{{ user_info.email }}</p>
+      <div class="user-member-since">
+        <i data-lucide="calendar" class="member-icon"></i>
+        <span>Member since {{ user_info.member_since }}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Summary Stats Section -->
+<section class="stats-section">
+  <div class="stats-inner">
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-icon-wrapper">
+          <i data-lucide="wallet" class="stat-icon"></i>
+        </div>
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-amount">{{ stats.total_spent }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon-wrapper">
+          <i data-lucide="trending-down" class="stat-icon"></i>
+        </div>
+        <div class="stat-label">Transactions</div>
+        <div class="stat-amount">{{ stats.transaction_count }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon-wrapper">
+          <i data-lucide="tag" class="stat-icon"></i>
+        </div>
+        <div class="stat-label">Top Category</div>
+        <div class="stat-amount">{{ stats.top_category }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Transaction History Section -->
+<section class="transactions-section">
+  <div class="transactions-inner">
+    <h2 class="section-title">
+      <i data-lucide="history" class="section-icon"></i>
+      Recent Transactions
+    </h2>
+    <div class="table-wrapper">
+      <table class="transaction-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th class="amount-col">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for txn in transactions %}
+          <tr>
+            <td class="date">{{ txn.date }}</td>
+            <td class="description">{{ txn.description }}</td>
+            <td class="category">
+              <span class="category-badge category-badge--{{ txn.category|lower|replace(' ', '-') }}">
+                {{ txn.category }}
+              </span>
+            </td>
+            <td class="amount">{{ txn.amount }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Category Breakdown Section -->
+<section class="categories-section">
+  <div class="categories-inner">
+    <h2 class="section-title">
+      <i data-lucide="pie-chart" class="section-icon"></i>
+      Spending by Category
+    </h2>
+    <div class="category-list">
+      {% for cat in categories %}
+      <div class="category-row">
+        <div class="category-info">
+          <span class="category-name">{{ cat.name }}</span>
+          <span class="category-total">{{ cat.total }}</span>
+        </div>
+        <div class="category-bar-container">
+          <div class="category-bar category-bar--{{ cat.name|lower|replace(' ', '-') }}"
+               style="width: {{ cat.percentage }}%"></div>
+        </div>
+        <span class="category-percentage">{{ cat.percentage }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

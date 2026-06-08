@@ -147,7 +147,48 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_info = {
+        'initials': 'DU',
+        'name': 'Demo User',
+        'email': 'demo@spendly.com',
+        'member_since': 'June 8, 2026'
+    }
+
+    stats = {
+        'total_spent': '₹4,119',
+        'transaction_count': 8,
+        'top_category': 'Shopping'
+    }
+
+    transactions = [
+        {'date': 'June 7', 'description': 'Restaurant lunch', 'category': 'Food', 'amount': '₹350'},
+        {'date': 'June 6', 'description': 'Miscellaneous', 'category': 'Other', 'amount': '₹200'},
+        {'date': 'June 5', 'description': 'Clothes', 'category': 'Shopping', 'amount': '₹1,200'},
+        {'date': 'June 5', 'description': 'OTT subscription', 'category': 'Entertainment', 'amount': '₹299'},
+        {'date': 'June 4', 'description': 'Pharmacy', 'category': 'Health', 'amount': '₹600'},
+        {'date': 'June 3', 'description': 'Electricity bill', 'category': 'Bills', 'amount': '₹850'},
+        {'date': 'June 2', 'description': 'Metro card recharge', 'category': 'Transport', 'amount': '₹120'},
+        {'date': 'June 1', 'description': 'Grocery run', 'category': 'Food', 'amount': '₹450'}
+    ]
+
+    categories = [
+        {'name': 'Shopping', 'total': '₹1,200', 'percentage': 29},
+        {'name': 'Bills', 'total': '₹850', 'percentage': 21},
+        {'name': 'Food', 'total': '₹800', 'percentage': 19},
+        {'name': 'Health', 'total': '₹600', 'percentage': 15},
+        {'name': 'Entertainment', 'total': '₹299', 'percentage': 7},
+        {'name': 'Transport', 'total': '₹120', 'percentage': 3},
+        {'name': 'Other', 'total': '₹200', 'percentage': 5}
+    ]
+
+    return render_template('profile.html',
+                         user_info=user_info,
+                         stats=stats,
+                         transactions=transactions,
+                         categories=categories)
 
 
 @app.route("/expenses/add")
