@@ -19,6 +19,59 @@
   </div>
 </section>
 
+<!-- Filter Bar Section -->
+<section class="filter-bar-section">
+  <div class="filter-bar-inner">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="auth-error">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Preset buttons -->
+    <div class="filter-presets">
+      <a href="{{ preset_urls.this_month }}"
+         class="btn-ghost filter-preset {% if active_preset == 'this_month' %}filter-preset--active{% endif %}">
+        This Month
+      </a>
+      <a href="{{ preset_urls.last_3_months }}"
+         class="btn-ghost filter-preset {% if active_preset == 'last_3_months' %}filter-preset--active{% endif %}">
+        Last 3 Months
+      </a>
+      <a href="{{ preset_urls.last_6_months }}"
+         class="btn-ghost filter-preset {% if active_preset == 'last_6_months' %}filter-preset--active{% endif %}">
+        Last 6 Months
+      </a>
+      <a href="{{ preset_urls.all_time }}"
+         class="btn-ghost filter-preset {% if active_preset == 'all_time' %}filter-preset--active{% endif %}">
+        All Time
+      </a>
+    </div>
+
+    <!-- Custom range form -->
+    <form method="GET" action="{{ url_for('profile') }}" class="filter-form">
+      <div class="filter-inputs">
+        <div class="form-group filter-form-group">
+          <label for="date_from">From</label>
+          <input type="date" id="date_from" name="date_from" class="form-input"
+                 value="{{ date_from }}">
+        </div>
+        <div class="form-group filter-form-group">
+          <label for="date_to">To</label>
+          <input type="date" id="date_to" name="date_to" class="form-input"
+                 value="{{ date_to }}">
+        </div>
+        <button type="submit" class="btn-primary filter-apply">Apply</button>
+      </div>
+    </form>
+
+  </div>
+</section>
+
 <!-- Summary Stats Section -->
 <section class="stats-section">
   <div class="stats-inner">
